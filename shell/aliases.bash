@@ -99,40 +99,53 @@ alias mc="ssh rmc -t -- \".local/bin/ftb\""
 # ============================================================================
 
 __alias_ls() {
-  local almost_all="-A" # switchted from --almost-all for old bash support
-  local classify="-F" # switched from --classify for old bash support
-  local colorized="--color=auto"
-  local groupdirs="--group-directories-first"
-  local literal=""
-  local long="-l"
-  local single_column="-1"
-  local timestyle=""
+  _bin="ls"
+  _almost_all="-A"  # switchted from --almost-all for old bash support
+  _classify="-F"    # switched from --classify for old bash support
+  _colorized="--color=auto"
+  _derefernce=""
+  _groupdirs="--group-directories-first"
+  _literal=""
+  _long="-l"
+  _natural=""
+  _single_column="-1"
 
-  if ! ls $groupdirs >/dev/null 2>&1; then
-    groupdirs=""
+  # Use GNU coreutils ls if available
+  if command -v gls >/dev/null 2>&1; then
+    _bin="gls"
+    _derefernce="--dereference-command-line" # show symlink origins
+    _natural="-v" # sort numbers naturally
   fi
 
-  if [ "$DOTFILES_OS" = "Darwin" ]; then
-    almost_all="-A"
-    classify="-F"
-    colorized="-G"
+  if ! $_bin $_groupdirs >/dev/null 2>&1; then
+    _groupdirs=""
+  fi
+
+  if [ "$_bin" != "gls" ] && [ "$DOTFILES_OS" = "Darwin" ]; then
+    _almost_all="-A"
+    _classify="-F"
+    _colorized="-G"
   fi
 
   if [ "$DOTFILES_OS" = "Linux" ] && [ "$DOTFILES_DISTRO" != "busybox" ]; then
-    literal="-N"
-    timestyle="--time-style=\"+%Y%m%d\""
+    _literal="-N"
   fi
 
-  # shellcheck disable=SC2139
-  alias ls="ls $colorized $literal $classify $groupdirs $timestyle"
-  # shellcheck disable=SC2139
-  alias la="ls $almost_all"
-  # shellcheck disable=SC2139
-  alias l="ls $single_column $almost_all"
-  # shellcheck disable=SC2139
-  alias ll="l $long"
-  # shit
-  alias kk='ll'
+  _ls="$_bin $_colorized $_literal $_classify $_groupdirs $_natural"
+  _la="$_ls $_almost_all"
+  _l="$_la $_single_column"
+  _ll="$_l $_long $_derefernce"
+
+  # shellcheck disable=2139
+  alias l="$_l"
+  # shellcheck disable=2139
+  alias la="$_la"
+  # shellcheck disable=2139
+  alias ll="$_ll"
+  # shellcheck disable=2139
+  alias ls="$_ls"
+  # shellcheck disable=2139
+  alias kk="$_ll"
 }
 __alias_ls
 
